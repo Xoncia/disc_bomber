@@ -140,37 +140,113 @@
     border-radius: 8px;
     padding: 1rem;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 0.75rem;
     transition: all 0.3s ease;
     animation: fadeIn 0.3s ease forwards;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes fadeOut {
-    from {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    to {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
+    cursor: pointer;
 }
 
 .endpoint-item:hover {
     border-color: var(--border-hover);
     box-shadow: var(--card-shadow);
+}
+
+.endpoint-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 2rem;
+    position: relative;
+}
+
+.endpoint-header:after {
+    content: '\f107';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    right: 0.2rem;
+    top: 50%;
+    transform: translateY(-50%) rotate(0deg);
+    transition: transform 0.3s ease;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    pointer-events: none;
+}
+
+.endpoint-item.expanded .endpoint-header:after {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.endpoint-details {
+    display: none;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.endpoint-item.expanded .endpoint-details {
+    display: block;
+    animation: slideDown 0.3s ease;
+}
+
+.endpoint-description {
+    margin-top: -1rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+    white-space: pre-line;
+}
+
+.endpoint-params {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.endpoint-params h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.param-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+}
+
+.param-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.param-name {
+    color: var(--primary-color);
+    font-family: monospace;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.param-type {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    padding: 0.1rem 0.4rem;
+    background: var(--tag-bg);
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.param-description {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.4;
 }
 
 .endpoint-info {
@@ -312,6 +388,60 @@
 .endpoint-item.fade-out {
     animation: fadeOut 0.3s ease forwards;
 }
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.endpoint-empty {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+    margin-bottom: 1rem;
+}
+
+.endpoint-empty i {
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+
+body[data-theme='light'] .endpoint-empty {
+    background: rgba(0, 0, 0, 0.02);
+}
 </style>
 {% endblock %}
 
@@ -354,6 +484,18 @@
                     API Endpoints
                 </h3>
                 <div class="endpoint-controls">
+                    <select id="moduleFilter" class="endpoints-select">
+                        <option value="all">All Modules</option>
+                        <option value="discord">Discord Integration</option>
+                        <option value="basic">Basic Routes</option>
+                    </select>
+                    <select id="methodFilter" class="endpoints-select">
+                        <option value="all">All Methods</option>
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
                     <select id="endpointsPerPage" class="endpoints-select">
                         <option value="5" selected>5 per page</option>
                         <option value="10">10 per page</option>
@@ -367,14 +509,42 @@
             <div class="endpoint-list" id="endpointList">
                 {% for module in modules.integrated + modules.custom %}
                     {% for endpoint in module.endpoints %}
-                    <div class="endpoint-item">
-                        <div class="endpoint-info">
-                            <span class="endpoint-method method-{{ endpoint.method|lower }}">{{ endpoint.method }}</span>
-                            <span class="endpoint-url">{{ endpoint.url }}</span>
+                    <div class="endpoint-item" data-module="{{ module.name|lower }}" data-method="{{ endpoint.method }}">
+                        <div class="endpoint-header">
+                            <div class="endpoint-info">
+                                <span class="endpoint-method method-{{ endpoint.method|lower }}">{{ endpoint.method }}</span>
+                                <span class="endpoint-url">{{ endpoint.url }}</span>
+                            </div>
+                            <div class="endpoint-module">
+                                <i class="{{ module.icon }}"></i>
+                                {{ module.name }}
+                            </div>
                         </div>
-                        <div class="endpoint-module">
-                            <i class="{{ module.icon }}"></i>
-                            {{ module.name }}
+                        <div class="endpoint-details">
+                            {% if endpoint.description and endpoint.description != "No description available." %}
+                            <div class="endpoint-description">
+                                {{ endpoint.description }}
+                            </div>
+                            {% else %}
+                            <div class="endpoint-empty">
+                                <i class="fas fa-info-circle"></i>
+                                No description available for this endpoint.
+                            </div>
+                            {% endif %}
+                            {% if endpoint.params %}
+                            <div class="endpoint-params">
+                                <h4>Parameters</h4>
+                                {% for param in endpoint.params %}
+                                <div class="param-item">
+                                    <div class="param-header">
+                                        <span class="param-name">{{ param.name }}</span>
+                                        <span class="param-type">{{ param.type }}</span>
+                                    </div>
+                                    <span class="param-description">{{ param.description }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                     {% endfor %}
@@ -400,6 +570,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     const endpointList = document.getElementById('endpointList');
     const endpointsPerPageSelect = document.getElementById('endpointsPerPage');
+    const moduleFilter = document.getElementById('moduleFilter');
+    const methodFilter = document.getElementById('methodFilter');
     const prevPageBtn = document.getElementById('prevPage');
     const nextPageBtn = document.getElementById('nextPage');
     const currentPageSpan = document.getElementById('currentPage');
@@ -408,8 +580,26 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentPage = 1;
     let endpointsPerPage = parseInt(endpointsPerPageSelect.value);
     let endpoints = Array.from(endpointList.getElementsByClassName('endpoint-item'));
+    let filteredEndpoints = endpoints;
     let totalPages = Math.ceil(endpoints.length / endpointsPerPage);
     let isAnimating = false;
+
+    function filterEndpoints() {
+        const moduleValue = moduleFilter.value;
+        const methodValue = methodFilter.value;
+
+        filteredEndpoints = endpoints.filter(endpoint => {
+            const moduleMatch = moduleValue === 'all' || 
+                endpoint.dataset.module.toLowerCase().includes(moduleValue.toLowerCase());
+            const methodMatch = methodValue === 'all' || 
+                endpoint.dataset.method === methodValue;
+            return moduleMatch && methodMatch;
+        });
+
+        totalPages = Math.ceil(filteredEndpoints.length / endpointsPerPage);
+        currentPage = 1;
+        updatePagination();
+    }
 
     async function updatePagination(direction = 'next') {
         if (isAnimating) return;
@@ -436,15 +626,15 @@ document.addEventListener('DOMContentLoaded', function() {
         await Promise.all(promises);
 
         // Then, show and animate in new items
-        endpoints.forEach((endpoint, index) => {
-            if (index >= startIndex && index < endIndex) {
-                endpoint.style.display = 'flex';
-                endpoint.style.animation = 'none';
-                endpoint.offsetHeight; // Trigger reflow
-                endpoint.style.animation = null;
-            } else {
-                endpoint.style.display = 'none';
-            }
+        endpoints.forEach(endpoint => {
+            endpoint.style.display = 'none';
+        });
+
+        filteredEndpoints.slice(startIndex, endIndex).forEach(endpoint => {
+            endpoint.style.display = 'flex';
+            endpoint.style.animation = 'none';
+            endpoint.offsetHeight; // Trigger reflow
+            endpoint.style.animation = null;
         });
 
         prevPageBtn.disabled = currentPage === 1;
@@ -456,12 +646,22 @@ document.addEventListener('DOMContentLoaded', function() {
         isAnimating = false;
     }
 
-    async function updateEndpointsPerPage() {
+    // Toggle endpoint details
+    endpointList.addEventListener('click', (e) => {
+        const endpoint = e.target.closest('.endpoint-item');
+        if (endpoint) {
+            endpoint.classList.toggle('expanded');
+        }
+    });
+
+    moduleFilter.addEventListener('change', filterEndpoints);
+    methodFilter.addEventListener('change', filterEndpoints);
+    endpointsPerPageSelect.addEventListener('change', () => {
         endpointsPerPage = parseInt(endpointsPerPageSelect.value);
-        totalPages = Math.ceil(endpoints.length / endpointsPerPage);
+        totalPages = Math.ceil(filteredEndpoints.length / endpointsPerPage);
         currentPage = 1;
-        await updatePagination();
-    }
+        updatePagination();
+    });
 
     prevPageBtn.addEventListener('click', async () => {
         if (currentPage > 1 && !isAnimating) {
@@ -477,9 +677,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    endpointsPerPageSelect.addEventListener('change', updateEndpointsPerPage);
-
-    // Initial pagination
+    // Initial load
     updatePagination();
 });
 </script>

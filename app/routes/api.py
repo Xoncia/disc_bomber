@@ -12,7 +12,20 @@ discord_service = DiscordService()
 
 @api.route('/routes', methods=['GET'])
 def list_routes() -> dict:
-    """List all registered API routes"""
+    """List all registered API routes.
+    
+    Returns a list of all registered API routes in the application,
+    including their endpoints, methods, and metadata.
+    
+    Parameters:
+        None
+        
+    Returns:
+        dict: {
+            "total": int,
+            "routes": List[dict]
+        }
+    """
     try:
         routes = route_service.get_registered_routes()
         return jsonify(MessageResponse.success_response(
@@ -30,7 +43,23 @@ def list_routes() -> dict:
 
 @api.route('/stats', methods=['GET'])
 def get_stats() -> dict:
-    """Get system statistics and health status"""
+    """Get system statistics and health status.
+    
+    Returns current system statistics including uptime, health status,
+    and other operational metrics.
+    
+    Parameters:
+        None
+        
+    Returns:
+        dict: {
+            "status": str,
+            "uptime": str,
+            "uptime_seconds": int,
+            "is_healthy": bool,
+            "last_check": datetime
+        }
+    """
     try:
         status = route_service.get_system_status()
         uptime = route_service.get_uptime()

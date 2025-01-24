@@ -8,7 +8,17 @@ discord_service = DiscordService()
 
 @discord_routes.route('/webhook', methods=['POST'])
 def webhook():
-    """Handle Discord webhook"""
+    """Handle Discord webhook events.
+    
+    Processes incoming webhook events from Discord and performs
+    the appropriate actions based on the event type.
+    
+    Parameters:
+        data (json): The webhook payload from Discord containing event details
+        
+    Returns:
+        dict: Status of the webhook processing
+    """
     try:
         data = request.get_json()
         if not data:
@@ -28,7 +38,20 @@ def webhook():
 
 @discord_routes.route('/tokens', methods=['GET'])
 def list_tokens():
-    """List all Discord tokens"""
+    """List all Discord tokens.
+    
+    Retrieves a list of all stored Discord tokens with their metadata.
+    Tokens are masked for security.
+    
+    Parameters:
+        None
+        
+    Returns:
+        dict: {
+            "tokens": List[TokenSchema],
+            "total": int
+        }
+    """
     try:
         tokens = discord_service.get_tokens()
         return jsonify(MessageResponse.success_response(
@@ -46,7 +69,17 @@ def list_tokens():
 
 @discord_routes.route('/tokens', methods=['POST'])
 def create_token():
-    """Create a new Discord token"""
+    """Create a new Discord token.
+    
+    Adds a new Discord token to the system with the specified name.
+    
+    Parameters:
+        name (str): A friendly name for the token
+        token (str): The Discord token value
+        
+    Returns:
+        dict: The created token object with metadata
+    """
     try:
         data = request.get_json()
         if not data or 'name' not in data or 'token' not in data:
@@ -74,7 +107,16 @@ def create_token():
 
 @discord_routes.route('/tokens/<token_id>', methods=['DELETE'])
 def delete_token(token_id: str):
-    """Delete a Discord token"""
+    """Delete a Discord token.
+    
+    Removes the specified Discord token from the system.
+    
+    Parameters:
+        token_id (str): The ID of the token to delete
+        
+    Returns:
+        dict: Success/failure status of the deletion
+    """
     try:
         if discord_service.delete_token(token_id):
             return jsonify(MessageResponse.success_response(
@@ -92,7 +134,18 @@ def delete_token(token_id: str):
 
 @discord_routes.route('/messages/delete', methods=['POST'])
 def delete_messages():
-    """Delete Discord messages"""
+    """Delete Discord messages in bulk.
+    
+    Deletes multiple messages from a specified Discord channel or DM.
+    
+    Parameters:
+        channelType (str): Type of channel ('dm' or 'channel')
+        channelId (str): ID of the channel or DM
+        count (int): Number of messages to delete
+        
+    Returns:
+        dict: Status of the deletion operation
+    """
     try:
         data = request.get_json()
         if not data or 'channelType' not in data or 'channelId' not in data or 'count' not in data:
@@ -117,7 +170,19 @@ def delete_messages():
 
 @discord_routes.route('/messages/scrape', methods=['POST'])
 def scrape_messages():
-    """Scrape Discord messages"""
+    """Scrape Discord messages.
+    
+    Downloads messages from a specified Discord channel, DM, or server
+    and exports them in the requested format.
+    
+    Parameters:
+        type (str): Target type ('dm', 'channel', or 'server')
+        targetId (str): ID of the target (channel, DM, or server)
+        format (str): Export format ('json', 'txt', or 'csv')
+        
+    Returns:
+        file: The exported messages in the requested format
+    """
     try:
         data = request.get_json()
         if not data or 'type' not in data or 'targetId' not in data or 'format' not in data:
@@ -148,7 +213,7 @@ def setup_module():
         version="1.0.0",
         author="System",
         icon="fab fa-discord",
-        routes_count=6,  # Updated route count
+        routes_count=6,
         is_integrated=True,
         blueprint=discord_routes
     )) 
