@@ -97,6 +97,5 @@ wheels/
 !.env.example
 
 # Project specific
-instance/config.py
 app/static/uploads/
 tmp/ 

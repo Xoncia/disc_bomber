@@ -5,7 +5,7 @@ class Config:
     """Application configuration class"""
     
     BASE_DIR = Path(__file__).resolve().parent.parent
-    SECRET_KEY = "LKASO92jd890HJAW(*&DHN@#)"
+    SECRET_KEY = ""
     SQLALCHEMY_DATABASE_URI = "sqlite:///app.db"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
