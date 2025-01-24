@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Flask App{% endblock %} - Disc Bomber</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <style>
+    /* Custom Notyf Styles */
+    :root {
+        --notyf-success-background: var(--success-color);
+        --notyf-error-background: var(--danger-color);
+        --notyf-warning-background: var(--warning-color);
+        --notyf-info-background: var(--info-color);
+    }
+
+    .notyf {
+        padding: 0;
+        top: 1rem !important;
+        left: -1rem !important;
+    }
+
+    .notyf__toast {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 0.875rem;
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        max-width: 320px;
+        color: var(--text-color);
+        margin-bottom: 0.75rem;
+    }
+
+    .notyf__wrapper {
+        display: flex;
+        align-items: center;
+        padding: 0;
+    }
+
+    .notyf__icon {
+        background: none !important;
+        width: auto !important;
+        height: auto !important;
+        margin-right: 0.75rem;
+        padding: 0;
+    }
+
+    .notyf__icon i {
+        font-size: 1rem;
+    }
+
+    .notyf__message {
+        font-weight: 500;
+        line-height: 1.4;
+        padding: 0;
+        margin: 0;
+    }
+
+    .notyf__ripple {
+        border-radius: 8px;
+        opacity: 0.08;
+    }
+
+    /* Success notification */
+    .notyf__toast--success {
+        background: var(--glass-bg);
+    }
+
+    .notyf__toast--success .notyf__icon i {
+        color: var(--success-color);
+    }
+
+    .notyf__toast--success .notyf__ripple {
+        background: var(--success-color);
+    }
+
+    /* Error notification */
+    .notyf__toast--error {
+        background: var(--glass-bg);
+    }
+
+    .notyf__toast--error .notyf__icon i {
+        color: var(--danger-color);
+    }
+
+    .notyf__toast--error .notyf__ripple {
+        background: var(--danger-color);
+    }
+
+    /* Warning notification */
+    .notyf__toast--warning {
+        background: var(--glass-bg);
+    }
+
+    .notyf__toast--warning .notyf__icon i {
+        color: var(--warning-color);
+    }
+
+    .notyf__toast--warning .notyf__ripple {
+        background: var(--warning-color);
+    }
+
+    /* Info notification */
+    .notyf__toast--info {
+        background: var(--glass-bg);
+    }
+
+    .notyf__toast--info .notyf__icon i {
+        color: var(--info-color);
+    }
+
+    .notyf__toast--info .notyf__ripple {
+        background: var(--info-color);
+    }
+
+    /* Light theme adjustments */
+    body[data-theme='light'] .notyf__toast {
+        background: var(--light-glass-bg);
+        border-color: var(--light-glass-border);
+        box-shadow: 0 4px 16px var(--light-shadow);
+        color: var(--light-text-color);
+    }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body data-theme="dark">
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-cube"></i>
+                <h1>Moriarty</h1>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('main.index') }}" class="{{ 'active' if request.endpoint == 'main.index' }}">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('main.routes_manager') }}" class="{{ 'active' if request.endpoint == 'main.routes_manager' }}">
+                    <i class="fas fa-route"></i>
+                    <span>Routes Manager</span>
+                </a>
+                <a href="{{ url_for('main.discord_manager') }}" class="{{ 'active' if request.endpoint == 'main.discord_manager' }}">
+                    <i class="fab fa-discord"></i>
+                    <span>Discord Tools</span>
+                </a>
+                <a href="{{ url_for('main.api_testing') }}" class="{{ 'active' if request.endpoint == 'main.api_testing' }}">
+                    <i class="fas fa-flask"></i>
+                    <span>API Testing</span>
+                </a>
+                <a href="{{ url_for('main.settings') }}" class="{{ 'active' if request.endpoint == 'main.settings' }}">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="page-title">
+                    <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+                </div>
+                <div class="top-bar-actions">
+                    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <div class="user-menu">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Admin</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+    <script>
+    // Initialize Notyf globally with updated configuration
+    const notyf = new Notyf({
+        duration: 3000,
+        position: { x: 'right', y: 'top' },
+        dismissible: true,
+        ripple: true,
+        types: [
+            {
+                type: 'success',
+                background: 'transparent',
+                icon: {
+                    className: 'fas fa-check-circle',
+                    tagName: 'i',
+                    color: 'var(--success-color)'
+                }
+            },
+            {
+                type: 'error',
+                background: 'transparent',
+                icon: {
+                    className: 'fas fa-times-circle',
+                    tagName: 'i',
+                    color: 'var(--danger-color)'
+                }
+            },
+            {
+                type: 'warning',
+                background: 'transparent',
+                icon: {
+                    className: 'fas fa-exclamation-circle',
+                    tagName: 'i',
+                    color: 'var(--warning-color)'
+                }
+            },
+            {
+                type: 'info',
+                background: 'transparent',
+                icon: {
+                    className: 'fas fa-info-circle',
+                    tagName: 'i',
+                    color: 'var(--info-color)'
+                }
+            }
+        ]
+    });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

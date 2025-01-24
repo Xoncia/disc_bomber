@@ -1,0 +1,18 @@
+<nav class="navbar">
+    <div class="navbar-brand">
+        <a href="{{ url_for('main.index') }}">
+            <i class="fas fa-cube"></i>
+            Flask Dashboard
+        </a>
+    </div>
+    <div class="navbar-menu">
+        <a href="{{ url_for('main.index') }}">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>
+        <a href="{{ url_for('main.list_routes') }}">
+            <i class="fas fa-route"></i>
+            API Routes
+        </a>
+    </div>
+</nav> 

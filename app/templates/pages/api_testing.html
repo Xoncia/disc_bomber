@@ -1,0 +1,582 @@
+{% extends "base.html" %}
+
+{% block title %}API Testing{% endblock %}
+{% block page_title %}API Testing{% endblock %}
+
+{% block content %}
+<div class="api-testing">
+    <div class="glass-card">
+        <div class="request-section">
+            <div class="endpoint-selector">
+                <div class="method-select">
+                    <select id="method" class="method-dropdown">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                </div>
+                <div class="url-input">
+                    <select id="endpoint-select" class="endpoint-dropdown">
+                        {% for module in modules.integrated + modules.custom %}
+                            {% for endpoint in module.endpoints %}
+                                <option value="{{ endpoint.url }}" data-method="{{ endpoint.method }}">
+                                    {{ endpoint.url }} ({{ module.name }})
+                                </option>
+                            {% endfor %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <button id="send-request" class="btn-primary">
+                    <i class="fas fa-paper-plane"></i>
+                    Send
+                </button>
+            </div>
+
+            <div class="request-tabs">
+                <div class="tab-headers">
+                    <button class="tab-btn active" data-tab="params">Params</button>
+                    <button class="tab-btn" data-tab="headers">Headers</button>
+                    <button class="tab-btn" data-tab="body">Body</button>
+                </div>
+
+                <div class="tab-content">
+                    <div class="tab-pane active" id="params">
+                        <div class="param-list">
+                            <div class="param-row">
+                                <input type="text" class="param-key" placeholder="Key">
+                                <input type="text" class="param-value" placeholder="Value">
+                                <button class="btn-icon remove-param">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button class="btn-secondary add-param">
+                            <i class="fas fa-plus"></i>
+                            Add Parameter
+                        </button>
+                    </div>
+
+                    <div class="tab-pane" id="headers">
+                        <div class="header-list">
+                            <div class="header-row">
+                                <input type="text" class="header-key" placeholder="Key">
+                                <input type="text" class="header-value" placeholder="Value">
+                                <button class="btn-icon remove-header">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button class="btn-secondary add-header">
+                            <i class="fas fa-plus"></i>
+                            Add Header
+                        </button>
+                    </div>
+
+                    <div class="tab-pane" id="body">
+                        <div class="body-editor">
+                            <div class="editor-toolbar">
+                                <select class="body-type">
+                                    <option value="json">JSON</option>
+                                    <option value="form">Form Data</option>
+                                    <option value="raw">Raw</option>
+                                </select>
+                                <button class="btn-secondary format-json">
+                                    <i class="fas fa-code"></i>
+                                    Format JSON
+                                </button>
+                            </div>
+                            <textarea id="request-body" class="body-textarea" placeholder="Request body"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="response-section">
+            <div class="response-header">
+                <div class="response-status">
+                    <span class="status-code"></span>
+                    <span class="status-text"></span>
+                </div>
+                <div class="response-time">
+                    <i class="fas fa-clock"></i>
+                    <span class="time-value"></span>
+                </div>
+            </div>
+            <div class="response-body">
+                <pre><code class="response-code"></code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    /* Light mode */
+    --text-primary: #1a1a1a;
+    --text-secondary: #666666;
+    --border-color: #e5e7eb;
+    --border-hover: #d1d5db;
+    --card-bg: #ffffff;
+    --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --tag-bg: #f3f4f6;
+    --primary-color: #ec4899;
+    --success-color: #34d399;
+    --error-color: #ff6347;
+    --input-bg: #f9fafb;
+    --input-border: #e5e7eb;
+    --btn-hover: #f3f4f6;
+}
+
+[data-theme="dark"] {
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --border-hover: rgba(255, 255, 255, 0.2);
+    --card-bg: rgba(30, 32, 47, 0.5);
+    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --tag-bg: rgba(255, 255, 255, 0.1);
+    --primary-color: #ec4899;
+    --success-color: #34d399;
+    --error-color: #ff6347;
+    --input-bg: rgba(255, 255, 255, 0.05);
+    --input-border: rgba(255, 255, 255, 0.1);
+    --btn-hover: rgba(255, 255, 255, 0.1);
+}
+
+.api-testing {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.glass-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.endpoint-selector {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+}
+
+.method-select {
+    width: 120px;
+    position: relative;
+}
+
+.url-input {
+    flex: 1;
+    position: relative;
+}
+
+.method-dropdown, .endpoint-dropdown {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    appearance: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.method-select::after, .url-input::after {
+    content: '\f0d7';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    right: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    pointer-events: none;
+}
+
+.method-dropdown:hover, .endpoint-dropdown:hover {
+    border-color: var(--border-hover);
+}
+
+.method-dropdown:focus, .endpoint-dropdown:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.1);
+}
+
+.method-dropdown option, .endpoint-dropdown option {
+    padding: 0.5rem;
+    background: var(--card-bg);
+    color: var(--text-primary);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: opacity 0.3s ease;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+.btn-secondary {
+    background: var(--input-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--input-border);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: var(--btn-hover);
+}
+
+.request-tabs {
+    margin-top: 1.5rem;
+}
+
+.tab-headers {
+    display: flex;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1rem;
+}
+
+.tab-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-weight: 500;
+    position: relative;
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary-color);
+}
+
+.tab-pane {
+    display: none;
+    padding: 1rem 0;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+.param-row, .header-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.param-key, .param-value, .header-key, .header-value {
+    padding: 0.5rem;
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.btn-icon {
+    padding: 0.5rem;
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-icon:hover {
+    background: var(--btn-hover);
+}
+
+.body-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.editor-toolbar {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.body-type {
+    padding: 0.5rem;
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+
+.body-textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 1rem;
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-family: monospace;
+    resize: vertical;
+}
+
+.response-section {
+    margin-top: 2rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+}
+
+.response-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.response-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-code {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.status-code.success {
+    color: var(--success-color);
+}
+
+.status-code.error {
+    color: var(--error-color);
+}
+
+.response-time {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.response-body {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    padding: 1rem;
+}
+
+.response-code {
+    margin: 0;
+    white-space: pre-wrap;
+    font-family: monospace;
+    color: var(--text-primary);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.dataset.tab;
+            
+            // Update active tab button
+            document.querySelector('.tab-btn.active').classList.remove('active');
+            btn.classList.add('active');
+            
+            // Update active tab pane
+            document.querySelector('.tab-pane.active').classList.remove('active');
+            document.getElementById(tabId).classList.add('active');
+        });
+    });
+
+    // Add/Remove Parameters
+    const addParamBtn = document.querySelector('.add-param');
+    addParamBtn.addEventListener('click', () => {
+        const paramList = document.querySelector('.param-list');
+        const newRow = document.createElement('div');
+        newRow.className = 'param-row';
+        newRow.innerHTML = `
+            <input type="text" class="param-key" placeholder="Key">
+            <input type="text" class="param-value" placeholder="Value">
+            <button class="btn-icon remove-param">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        paramList.appendChild(newRow);
+    });
+
+    document.querySelector('.param-list').addEventListener('click', (e) => {
+        if (e.target.closest('.remove-param')) {
+            e.target.closest('.param-row').remove();
+        }
+    });
+
+    // Add/Remove Headers
+    const addHeaderBtn = document.querySelector('.add-header');
+    addHeaderBtn.addEventListener('click', () => {
+        const headerList = document.querySelector('.header-list');
+        const newRow = document.createElement('div');
+        newRow.className = 'header-row';
+        newRow.innerHTML = `
+            <input type="text" class="header-key" placeholder="Key">
+            <input type="text" class="header-value" placeholder="Value">
+            <button class="btn-icon remove-header">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        headerList.appendChild(newRow);
+    });
+
+    document.querySelector('.header-list').addEventListener('click', (e) => {
+        if (e.target.closest('.remove-header')) {
+            e.target.closest('.header-row').remove();
+        }
+    });
+
+    // Format JSON
+    const formatJsonBtn = document.querySelector('.format-json');
+    formatJsonBtn.addEventListener('click', () => {
+        const textarea = document.getElementById('request-body');
+        try {
+            const json = JSON.parse(textarea.value);
+            textarea.value = JSON.stringify(json, null, 2);
+        } catch (e) {
+            // Show error toast or notification
+        }
+    });
+
+    // Update method when endpoint is selected
+    const endpointSelect = document.getElementById('endpoint-select');
+    const methodSelect = document.getElementById('method');
+    
+    endpointSelect.addEventListener('change', () => {
+        const selectedOption = endpointSelect.selectedOptions[0];
+        const method = selectedOption.dataset.method;
+        methodSelect.value = method;
+    });
+
+    // Send Request
+    const sendRequestBtn = document.getElementById('send-request');
+    sendRequestBtn.addEventListener('click', async () => {
+        const method = methodSelect.value;
+        const url = endpointSelect.value;
+        
+        // Collect parameters
+        const params = {};
+        document.querySelectorAll('.param-row').forEach(row => {
+            const key = row.querySelector('.param-key').value;
+            const value = row.querySelector('.param-value').value;
+            if (key) params[key] = value;
+        });
+
+        // Collect headers
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        document.querySelectorAll('.header-row').forEach(row => {
+            const key = row.querySelector('.header-key').value;
+            const value = row.querySelector('.header-value').value;
+            if (key) headers[key] = value;
+        });
+
+        // Get body
+        let body = null;
+        if (method !== 'GET') {
+            const bodyType = document.querySelector('.body-type').value;
+            const bodyContent = document.getElementById('request-body').value;
+            
+            if (bodyType === 'json' && bodyContent) {
+                try {
+                    body = JSON.parse(bodyContent);
+                } catch (e) {
+                    // Show error toast
+                    return;
+                }
+            } else if (bodyContent) {
+                body = bodyContent;
+            }
+        }
+
+        // Add query parameters to URL
+        const urlObj = new URL(window.location.origin + url);
+        Object.entries(params).forEach(([key, value]) => {
+            urlObj.searchParams.append(key, value);
+        });
+
+        const startTime = performance.now();
+
+        try {
+            const response = await fetch(urlObj, {
+                method,
+                headers,
+                body: body ? JSON.stringify(body) : null
+            });
+
+            const endTime = performance.now();
+            const duration = Math.round(endTime - startTime);
+
+            const statusCode = document.querySelector('.status-code');
+            const statusText = document.querySelector('.status-text');
+            const timeValue = document.querySelector('.time-value');
+            const responseCode = document.querySelector('.response-code');
+
+            statusCode.textContent = response.status;
+            statusCode.className = 'status-code ' + (response.ok ? 'success' : 'error');
+            statusText.textContent = response.statusText;
+            timeValue.textContent = `${duration}ms`;
+
+            const data = await response.json();
+            responseCode.textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+            // Show error in response section
+            document.querySelector('.response-code').textContent = error.message;
+        }
+    });
+});
+</script>
+{% endblock %} 

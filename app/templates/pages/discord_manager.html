@@ -1,0 +1,446 @@
+{% extends "base.html" %}
+
+{% block title %}Discord Tools{% endblock %}
+{% block page_title %}Discord Tools{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="dashboard-grid">
+        <!-- Discord Tokens Card -->
+        <div class="glass-card">
+            <div class="card-header">
+                <h3><i class="fas fa-key"></i> Discord Tokens</h3>
+            </div>
+            <div class="tokens-list" id="tokensList">
+                <div class="token-item">
+                    <div class="token-info">
+                        <div class="token-name">test</div>
+                        <div class="token-value">•••••••••••</div>
+                    </div>
+                    <div class="token-actions">
+                        <button class="btn-icon" onclick="deleteToken(1)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-primary" onclick="openAddTokenModal()">
+                <i class="fas fa-plus"></i> Add Token
+            </button>
+        </div>
+
+        <!-- Bulk Message Delete Card -->
+        <div class="glass-card">
+            <div class="card-header">
+                <h3><i class="fas fa-trash-alt"></i> Bulk Message Delete</h3>
+            </div>
+            <div class="form-group">
+                <label>Channel Type</label>
+                <select class="form-select" id="channelType">
+                    <option value="dm">Direct Messages</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Channel/User ID</label>
+                <input type="text" class="form-input" id="channelId" placeholder="Enter ID">
+            </div>
+            <div class="form-group">
+                <label>Message Count</label>
+                <input type="number" class="form-input" id="messageCount" value="100">
+            </div>
+            <button class="btn-danger" onclick="deleteMessages()">
+                <i class="fas fa-trash"></i> Delete Messages
+            </button>
+        </div>
+
+        <!-- Message Scraper Card -->
+        <div class="glass-card">
+            <div class="card-header">
+                <h3><i class="fas fa-download"></i> Message Scraper</h3>
+            </div>
+            <div class="form-group">
+                <label>Target Type</label>
+                <select class="form-select" id="targetType">
+                    <option value="dm">Direct Messages</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Target ID</label>
+                <input type="text" class="form-input" id="targetId" placeholder="Enter ID">
+            </div>
+            <div class="form-group">
+                <label>Export Format</label>
+                <select class="form-select" id="exportFormat">
+                    <option value="json">JSON</option>
+                </select>
+            </div>
+            <button class="btn-primary" onclick="startScraping()">
+                <i class="fas fa-download"></i> Start Scraping
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Token Modal -->
+<div class="modal" id="addTokenModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Add Discord Token</h3>
+            <button class="btn-secondary" onclick="closeAddTokenModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Token Name</label>
+                <input type="text" class="form-input" id="tokenName" placeholder="Enter token name">
+            </div>
+            <div class="form-group">
+                <label>Token Value</label>
+                <input type="text" class="form-input" id="tokenValue" placeholder="Enter token value">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeAddTokenModal()">Cancel</button>
+                <button class="btn-primary" onclick="addToken()">Add Token</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card-header {
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group:last-of-type {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.form-input,
+.form-select {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    background: rgba(16, 18, 27, 0.4);
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.empty-state {
+    color: rgba(255, 255, 255, 0.5);
+    text-align: left;
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.tokens-list {
+    margin-bottom: 1.5rem;
+}
+
+.token-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(16, 18, 27, 0.4);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+}
+
+.token-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.token-name {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.token-value {
+    color: rgba(255, 255, 255, 0.5);
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.token-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.glass-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.glass-card .btn-primary,
+.glass-card .btn-danger {
+    margin-top: auto;
+    width: 35%;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: none;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.glass-card .btn-primary {
+    background: var(--primary-color);
+}
+
+.glass-card .btn-danger {
+    background: var(--danger-color);
+}
+
+.glass-card .btn-primary:hover,
+.glass-card .btn-danger:hover {
+    opacity: 0.9;
+}
+
+/* Light theme adjustments */
+body[data-theme='light'] .empty-state {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+body[data-theme='light'] .token-value {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+body[data-theme='light'] .token-item {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+body[data-theme='light'] .btn-icon:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+body[data-theme='light'] .form-input,
+body[data-theme='light'] .form-select {
+    background: rgba(255, 255, 255, 0.9);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const notyf = new Notyf({
+        duration: 3000,
+        position: { x: 'right', y: 'top' },
+        dismissible: true
+    });
+
+    const modal = document.getElementById('addTokenModal');
+
+    // Modal functions
+    function openAddTokenModal() {
+        modal.classList.add('show');
+    }
+
+    function closeAddTokenModal() {
+        modal.classList.remove('show');
+        document.getElementById('tokenName').value = '';
+        document.getElementById('tokenValue').value = '';
+    }
+
+    // Token management
+    async function addToken() {
+        const name = document.getElementById('tokenName').value;
+        const token = document.getElementById('tokenValue').value;
+
+        if (!name || !token) {
+            notyf.error('Please fill in all fields');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/discord/tokens', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, token })
+            });
+
+            if (response.ok) {
+                notyf.success('Token added successfully');
+                closeAddTokenModal();
+                loadTokens();
+            } else {
+                throw new Error('Failed to add token');
+            }
+        } catch (error) {
+            notyf.error('Failed to add token');
+        }
+    }
+
+    async function loadTokens() {
+        try {
+            const response = await fetch('/api/discord/tokens');
+            if (!response.ok) throw new Error('Failed to load tokens');
+            
+            const result = await response.json();
+            if (!result.success) throw new Error(result.message);
+            
+            const tokensList = document.getElementById('tokensList');
+            const tokens = result.data.tokens;
+            
+            if (tokens.length === 0) {
+                tokensList.innerHTML = '<div class="empty-state">No tokens added yet</div>';
+                return;
+            }
+
+            tokensList.innerHTML = tokens.map(token => `
+                <div class="token-item" data-token-id="${token.id}">
+                    <div class="token-info">
+                        <div class="token-name">${token.name}</div>
+                        <div class="token-value">•••••••••••</div>
+                    </div>
+                    <div class="token-actions">
+                        <button class="btn-icon" onclick="deleteToken(${token.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (error) {
+            notyf.error('Failed to load tokens');
+        }
+    }
+
+    async function deleteToken(id) {
+        if (confirm('Are you sure you want to delete this token?')) {
+            try {
+                const response = await fetch(`/api/discord/tokens/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    notyf.success('Token deleted successfully');
+                    loadTokens();
+                } else {
+                    throw new Error('Failed to delete token');
+                }
+            } catch (error) {
+                notyf.error('Failed to delete token');
+            }
+        }
+    }
+
+    // Message deletion
+    async function deleteMessages() {
+        const channelType = document.getElementById('channelType').value;
+        const channelId = document.getElementById('channelId').value;
+        const count = document.getElementById('messageCount').value;
+        
+        if (!channelId) {
+            notyf.error('Please enter a channel/user ID');
+            return;
+        }
+
+        if (confirm(`Delete ${count} messages from ${channelType}?`)) {
+            try {
+                const response = await fetch('/api/discord/messages/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ channelType, channelId, count })
+                });
+                
+                if (response.ok) {
+                    notyf.success('Messages deleted successfully');
+                } else {
+                    throw new Error('Failed to delete messages');
+                }
+            } catch (error) {
+                notyf.error('Failed to delete messages');
+            }
+        }
+    }
+
+    // Message scraping
+    async function startScraping() {
+        const targetType = document.getElementById('targetType').value;
+        const targetId = document.getElementById('targetId').value;
+        const format = document.getElementById('exportFormat').value;
+        
+        if (!targetId) {
+            notyf.error('Please enter a target ID');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/discord/messages/scrape', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ type: targetType, targetId, format })
+            });
+            
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `discord_messages.${format}`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                notyf.success('Messages scraped successfully');
+            } else {
+                throw new Error('Failed to scrape messages');
+            }
+        } catch (error) {
+            notyf.error('Failed to scrape messages');
+        }
+    }
+
+    // Make functions globally available
+    window.openAddTokenModal = openAddTokenModal;
+    window.closeAddTokenModal = closeAddTokenModal;
+    window.addToken = addToken;
+    window.deleteToken = deleteToken;
+    window.deleteMessages = deleteMessages;
+    window.startScraping = startScraping;
+
+    // Initial load
+    loadTokens();
+});
+</script>
+{% endblock %}

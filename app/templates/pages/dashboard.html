@@ -1,0 +1,486 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root {
+    /* Light mode */
+    --text-primary: #1a1a1a;
+    --text-secondary: #666666;
+    --border-color: #e5e7eb;
+    --border-hover: #d1d5db;
+    --card-bg: #ffffff;
+    --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --tag-bg: #f3f4f6;
+    --primary-color: #ec4899;
+    --success-color: #34d399;
+    --error-color: #ff6347;
+    --method-get-bg: rgba(16, 185, 129, 0.15);
+    --method-get-color: #34d399;
+    --method-post-bg: rgba(236, 72, 153, 0.15);
+    --method-post-color: #ec4899;
+    --method-put-bg: rgba(245, 158, 11, 0.15);
+    --method-put-color: #fbbf24;
+    --method-delete-bg: rgba(239, 68, 68, 0.15);
+    --method-delete-color: #f87171;
+}
+
+[data-theme="dark"] {
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --border-hover: rgba(255, 255, 255, 0.2);
+    --card-bg: rgba(30, 32, 47, 0.5);
+    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --tag-bg: rgba(255, 255, 255, 0.1);
+    --primary-color: #ec4899;
+    --success-color: #34d399;
+    --error-color: #ff6347;
+    --method-get-bg: rgba(16, 185, 129, 0.15);
+    --method-get-color: #34d399;
+    --method-post-bg: rgba(236, 72, 153, 0.15);
+    --method-post-color: #ec4899;
+    --method-put-bg: rgba(245, 158, 11, 0.15);
+    --method-put-color: #fbbf24;
+    --method-delete-bg: rgba(239, 68, 68, 0.15);
+    --method-delete-color: #f87171;
+}
+
+.dashboard {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.glass-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+    border-color: var(--border-hover);
+    box-shadow: var(--card-shadow);
+}
+
+.stats {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stats i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    opacity: 0.9;
+}
+
+.stats-content h3 {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+}
+
+.stats-number {
+    margin: 0.25rem 0 0 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.stats-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.25rem 0 0 0;
+    font-size: 1rem;
+    color: var(--success-color);
+}
+
+.stats-status.offline {
+    color: var(--error-color);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.dashboard-row {
+    margin-top: 2rem;
+}
+
+.endpoints-section {
+    margin-top: 1rem;
+}
+
+.endpoint-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.endpoint-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+    animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+.endpoint-item:hover {
+    border-color: var(--border-hover);
+    box-shadow: var(--card-shadow);
+}
+
+.endpoint-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.endpoint-method {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    min-width: 50px;
+    text-align: center;
+}
+
+.method-get {
+    background: var(--method-get-bg);
+    color: var(--method-get-color);
+}
+
+.method-post {
+    background: var(--method-post-bg);
+    color: var(--method-post-color);
+}
+
+.method-put {
+    background: var(--method-put-bg);
+    color: var(--method-put-color);
+}
+
+.method-delete {
+    background: var(--method-delete-bg);
+    color: var(--method-delete-color);
+}
+
+.endpoint-url {
+    color: var(--text-primary);
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.endpoint-module {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-header h3 {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.section-header i {
+    font-size: 1.1rem;
+}
+
+.endpoint-count {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.endpoint-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.endpoints-select {
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.endpoints-select:hover {
+    border-color: var(--border-hover);
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.pagination-btn {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-btn:not(:disabled):hover {
+    border-color: var(--border-hover);
+    background: var(--border-color);
+}
+
+.pagination-info {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.endpoint-item.fade-out {
+    animation: fadeOut 0.3s ease forwards;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="dashboard-grid">
+        <div class="glass-card stats">
+            <i class="fas fa-network-wired"></i>
+            <div class="stats-content">
+                <h3>TOTAL ROUTES</h3>
+                <p class="stats-number">{{ stats.total_routes }}</p>
+            </div>
+        </div>
+        
+        <div class="glass-card stats">
+            <i class="fas fa-clock-rotate-left"></i>
+            <div class="stats-content">
+                <h3>SYSTEM UPTIME</h3>
+                <p class="stats-number">{{ stats.uptime }}</p>
+            </div>
+        </div>
+
+        <div class="glass-card stats">
+            <i class="fas fa-signal-stream"></i>
+            <div class="stats-content">
+                <h3>API STATUS</h3>
+                <p class="stats-status {{ 'offline' if not stats.is_healthy }}">
+                    <span class="status-dot"></span>
+                    {{ stats.status }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-row">
+        <div class="glass-card">
+            <div class="section-header">
+                <h3>
+                    <i class="fas fa-link"></i>
+                    API Endpoints
+                </h3>
+                <div class="endpoint-controls">
+                    <select id="endpointsPerPage" class="endpoints-select">
+                        <option value="5" selected>5 per page</option>
+                        <option value="10">10 per page</option>
+                        <option value="20">20 per page</option>
+                        <option value="50">50 per page</option>
+                    </select>
+                    <span class="endpoint-count">{{ stats.total_routes }} endpoints</span>
+                </div>
+            </div>
+            
+            <div class="endpoint-list" id="endpointList">
+                {% for module in modules.integrated + modules.custom %}
+                    {% for endpoint in module.endpoints %}
+                    <div class="endpoint-item">
+                        <div class="endpoint-info">
+                            <span class="endpoint-method method-{{ endpoint.method|lower }}">{{ endpoint.method }}</span>
+                            <span class="endpoint-url">{{ endpoint.url }}</span>
+                        </div>
+                        <div class="endpoint-module">
+                            <i class="{{ module.icon }}"></i>
+                            {{ module.name }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+
+            <div class="pagination">
+                <button class="pagination-btn" id="prevPage" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span class="pagination-info">Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
+                <button class="pagination-btn" id="nextPage" disabled>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const endpointList = document.getElementById('endpointList');
+    const endpointsPerPageSelect = document.getElementById('endpointsPerPage');
+    const prevPageBtn = document.getElementById('prevPage');
+    const nextPageBtn = document.getElementById('nextPage');
+    const currentPageSpan = document.getElementById('currentPage');
+    const totalPagesSpan = document.getElementById('totalPages');
+    
+    let currentPage = 1;
+    let endpointsPerPage = parseInt(endpointsPerPageSelect.value);
+    let endpoints = Array.from(endpointList.getElementsByClassName('endpoint-item'));
+    let totalPages = Math.ceil(endpoints.length / endpointsPerPage);
+    let isAnimating = false;
+
+    async function updatePagination(direction = 'next') {
+        if (isAnimating) return;
+        isAnimating = true;
+
+        const startIndex = (currentPage - 1) * endpointsPerPage;
+        const endIndex = startIndex + endpointsPerPage;
+        
+        // First, animate out current items
+        const promises = endpoints.map(endpoint => {
+            if (endpoint.style.display === 'flex') {
+                endpoint.classList.add('fade-out');
+                return new Promise(resolve => {
+                    endpoint.addEventListener('animationend', () => {
+                        endpoint.style.display = 'none';
+                        endpoint.classList.remove('fade-out');
+                        resolve();
+                    }, { once: true });
+                });
+            }
+            return Promise.resolve();
+        });
+
+        await Promise.all(promises);
+
+        // Then, show and animate in new items
+        endpoints.forEach((endpoint, index) => {
+            if (index >= startIndex && index < endIndex) {
+                endpoint.style.display = 'flex';
+                endpoint.style.animation = 'none';
+                endpoint.offsetHeight; // Trigger reflow
+                endpoint.style.animation = null;
+            } else {
+                endpoint.style.display = 'none';
+            }
+        });
+
+        prevPageBtn.disabled = currentPage === 1;
+        nextPageBtn.disabled = currentPage === totalPages;
+        
+        currentPageSpan.textContent = currentPage;
+        totalPagesSpan.textContent = totalPages;
+
+        isAnimating = false;
+    }
+
+    async function updateEndpointsPerPage() {
+        endpointsPerPage = parseInt(endpointsPerPageSelect.value);
+        totalPages = Math.ceil(endpoints.length / endpointsPerPage);
+        currentPage = 1;
+        await updatePagination();
+    }
+
+    prevPageBtn.addEventListener('click', async () => {
+        if (currentPage > 1 && !isAnimating) {
+            currentPage--;
+            await updatePagination('prev');
+        }
+    });
+
+    nextPageBtn.addEventListener('click', async () => {
+        if (currentPage < totalPages && !isAnimating) {
+            currentPage++;
+            await updatePagination('next');
+        }
+    });
+
+    endpointsPerPageSelect.addEventListener('change', updateEndpointsPerPage);
+
+    // Initial pagination
+    updatePagination();
+});
+</script>
+{% endblock %} 
