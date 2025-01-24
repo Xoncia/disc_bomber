@@ -99,3 +99,4 @@ wheels/
 # Project specific
 app/static/uploads/
 tmp/ 
+app/config.py
